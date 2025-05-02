@@ -1,17 +1,35 @@
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import "./style.css";
 import Trash from "../../assets/trash.svg";
 import api from "../../services/api";
 
 function Home() {
-  let users = []
+  const [users, setUsers] = useState([]);
 
-  // TODO: Criar função para cadastrar usuário 
+  const inputName = useRef(null);
+  const inputAge = useRef(null);
+  const inputEmail = useRef(null);
+
   async function getUsers() {
-    users = await api.get("/users")
+    const usersFromApi = await api.get("/users")
+    setUsers(usersFromApi.data)
   }
 
-  useEffect(()=> {getUsers()}, [])
+  async function createUsers() {
+    await api.post("/users", {
+      name: inputName.current.value,
+      age: inputAge.current.value,
+      email: inputEmail.current.value
+    })
+    getUsers()
+  }
+
+  async function deleteUser(id) {
+    await api.delete(`/users/${id}`)
+    getUsers()
+  }
+
+  useEffect(() => { getUsers() }, [])
 
   return (
     <>
@@ -20,10 +38,10 @@ function Home() {
           <h1>
             <form>
               <h1>Cadastro de Usuários</h1>
-              <input placeholder="Nome" name="nome" type="text" />
-              <input placeholder="Idade" name="idade" type="number" />
-              <input placeholder="Email" name="email" type="email" />
-              <button type="button">Cadastrar</button>
+              <input placeholder="Nome" name="nome" type="text" ref={inputName} />
+              <input placeholder="Idade" name="idade" type="number" ref={inputAge} />
+              <input placeholder="Email" name="email" type="email" ref={inputEmail} />
+              <button type="button" onClick={createUsers}>Cadastrar</button>
             </form>
           </h1>
         </div>
@@ -43,7 +61,7 @@ function Home() {
             </div>
 
             <button>
-              <img src={Trash} alt="trash-icon" />
+              <img src={Trash} alt="trash-icon" onClick={() => deleteUser(user.id)} />
             </button>
           </div>
         ))}
